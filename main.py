@@ -93,12 +93,15 @@ async def saga_monitoring():
     parser = SagaWebParser()
     parsed_cards = set([])
     while True:
-        cards = set(parser.parse_apartment_cards())
-        new_cards = cards.difference(parsed_cards)
-        if len(new_cards) > 0:
-            parsed_cards.update(new_cards)
-            await new_cards_handler(list(new_cards))
-        await asyncio.sleep(.001)
+        try:
+            cards = set(parser.parse_apartment_cards())
+            new_cards = cards.difference(parsed_cards)
+            if len(new_cards) > 0:
+                parsed_cards.update(new_cards)
+                await new_cards_handler(list(new_cards))
+            await asyncio.sleep(.001)
+        except Exception as ex:
+            print(f"error on parsing: {ex}")
 
 async def main():
     asyncio.create_task(saga_monitoring())
