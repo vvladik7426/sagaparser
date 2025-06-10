@@ -153,7 +153,7 @@ class SagaWebParser(Chrome):
 
         return True
 
-async def new_cards_handler(cards: list[ApartmentCard]):
+async def new_cards_handler(cards: list[ApartmentCard], handled: dict[str, bool]):
     for card in cards:
         print("NEW CARD FOUND!")
         print(card)
@@ -164,7 +164,8 @@ async def new_cards_handler(cards: list[ApartmentCard]):
             f"📝 <b>Загальні дані:</b>\n"
             f"<i>{card.about}</i>\n\n"
             f"🔗 <a href=\"{card.link}\">Перейти до обʼєкта</a>\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━"
+            f"━━━━━━━"
+            f"🚀 <b>Заявку надіслано!</b>" if handled.get(card.link, False) else ""
         )
 
         await send_to_all_clients(message)
@@ -178,9 +179,10 @@ async def saga_monitoring(immomio_creds: ImmomioCredentials):
             new_cards = cards.difference(parsed_cards)
             if len(new_cards) > 0:
                 parsed_cards.update(new_cards)
+                handled_cards = {}
                 for new_card in new_cards:
-                    parser.handle_apartment_card(new_card)
-                await new_cards_handler(list(new_cards))
+                    handled_cards[new_card.link] = parser.handle_apartment_card(new_card)
+                await new_cards_handler(list(new_cards), handled_cards)
         except Exception as ex:
             print(f"error on parsing: {ex}")
             try:
