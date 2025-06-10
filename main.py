@@ -39,7 +39,7 @@ class SagaWebParser(Chrome):
         options.add_argument('--no-sandbox')
         options.add_argument('--mute-audio')
         options.add_argument('--lang=en')
-        # options.add_argument("--headless")
+        options.add_argument("--headless")
         super().__init__(options=options)
         try:
             if not self.login_to_immomio(immomio_credentials):
@@ -159,14 +159,16 @@ async def new_cards_handler(cards: list[ApartmentCard], handled: dict[str, bool]
         print(card)
         print("_______________")
 
-        message = (
-            f"🏠 <b>Квартира №{card.index}</b>\n\n"
-            f"📝 <b>Загальні дані:</b>\n"
-            f"<i>{card.about}</i>\n\n"
-            f"🔗 <a href=\"{card.link}\">Перейти до обʼєкта</a>\n"
-            f"━━━━━━━"
-            f"🚀 <b>Заявку надіслано!</b>" if handled.get(card.link, False) else ""
-        )
+        message = f"""
+🏠 <b>Квартира №{card.index}</b>
+{"🚀<b> Заявку надіслано!</b>" if handled.get(card.link, False) else ""}
+
+📝 <b>Загальні дані:</b>
+<i>{card.about}</i>
+
+🔗 <a href=\"{card.link}\">Перейти до обʼєкта</a>
+━━━━━━━
+        """
 
         await send_to_all_clients(message)
 
