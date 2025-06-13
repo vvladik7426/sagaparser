@@ -1,34 +1,94 @@
 import os
+from datetime import timedelta, datetime
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
-from aiogram.filters import CommandStart
-from aiogram.types import Message, InlineKeyboardMarkup
+from aiogram.filters import CommandStart, Command
+from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 
-api_token = "7582392341:AAEegcVYFVfBHFAMXVj6eC0o1h893TTBjSs"
+from client_data import ClientData
+from database import ClientsDatabaseConnection
+
+# api_token = "7582392341:AAEegcVYFVfBHFAMXVj6eC0o1h893TTBjSs"
+api_token = "6546781849:AAGLlxA0Y_Vmc4phKCH7utXE-GTzFy8RVgQ"  # test bot @Person_AI_bot
 
 bot = Bot(api_token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
 
-chat_ids: list[int] = []
-
-if os.path.exists("chatIDS"):
-    with open("chatIDS", "r") as stream:
-        chat_ids.extend([int(_id) for _id in stream.read().split("\n")])
-
 @dp.message(CommandStart())
 async def start_handler(message: Message):
-    global chat_ids
-    if not (message.chat.id in chat_ids):
-        chat_ids.append(message.chat.id)
-        with open("chatIDS", "w") as stream:
-            stream.write("\n".join([str(_id) for _id in chat_ids]))
-        await message.delete()
-        await message.answer("Вас приєднано до моніторингу.")
-    else:
-        await message.delete()
-        await message.answer("Ви вже приєднані!і")
+    with ClientsDatabaseConnection() as db:
+        client = db.read_clients().by_telegram_username(message.from_user.username)
+        if client is not None:
+            await message.reply(f"Привіт, {message.from_user.first_name}!\n\n"
+                                f"Ви вже зареєстровані.\n"
+                                f"Наступна оплата: {(client.plan_activated_at + timedelta(days=30)).strftime('%d.%m.%Y')}\n",
+                                reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                                    [InlineKeyboardButton(text="Підтримка", url="https://t.me/yukothehealer")]
+                                ]))
+        else:
+            await message.reply(f"Вітаю, {message.from_user.first_name}!\n"
+"""
+Я — бот, який допоможе тобі знайти квартиру на SAGA в Німеччині.
+ 🏠 Як тільки з’являється нова квартира на сайті SAGA,
+ 🔔 я миттєво надсилаю тобі повідомлення
+ 📩 і автоматично подаю заявку за тебе — швидше, ніж це встигне зробити хтось інший!
+⚠️ Бот не гарантує отримання квартири, але значно збільшує твої шанси.
+👉 Щоб зв’язатися з менеджером та активувати мої можливості, натисни кнопку нижче.
+""",
+                                reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                                    [InlineKeyboardButton(text="Підтримка", url="https://t.me/yukothehealer")]
+                                ]))
+            db.write_client(ClientData(message.from_user.username))
+
+@dp.message(Command("setclcreds"))
+async def setclcreds_handler(message: Message):
+    if message.from_user.id == 1909320566:
+        args = message.text.split(" ")[1:]
+        print("setclcreds args:", args)
+        if len(args) >= 3:
+            username = args[0].replace('@', '')
+            immomio_email = args[1]
+            immomio_password = args[2]
+            with ClientsDatabaseConnection() as db:
+                client = db.read_clients().by_telegram_username(message.from_user.username)
+                print(db.read_clients())
+                if client is not None:
+                    await message.reply(f"== {client}")
+                    db.update_immomio_credentials(username, immomio_email, immomio_password)
+                    await message.reply(f"~= {db.read_clients().by_telegram_username(message.from_user.username)}")
+                else:
+                    await message.reply("!= any client")
+        else:
+            await message.reply(f"Not enough arguments!")
+
+@dp.message(Command("activatecl"))
+async def activatecl_handler(message: Message):
+    if message.from_user.id == 1909320566:
+        args = message.text.split(" ")[1:]
+        print("activatecl args:", args)
+        if len(args) >= 1:
+            username = args[0]
+            with ClientsDatabaseConnection() as db:
+                client = db.read_clients().by_telegram_username(username)
+                if client is not None:
+                    await message.reply(f"== {client}")
+                    db.update_plan_activated_at(client.telegram_username, datetime.now())
+                    await message.reply(f"~= {db.read_clients().by_telegram_username(username)}")
+                else:
+                    await message.reply(f"!= any client")
+        else:
+            await message.reply(f"Not enough arguments!")
+
+
+@dp.message(Command("rmcl"))
+async def rmcl_handler(message: Message):
+    pass
+
+@dp.message(Command("getcl"))
+async def getcl_handler(message: Message):
+    pass
 
 @dp.message()
 async def message_cleaner(message: Message):
@@ -39,6 +99,6 @@ async def start_bot():
     await dp.start_polling(bot)
 
 async def send_to_all_clients(message: str):
-    global chat_ids
-    for chat_id in chat_ids:
-        await bot.send_message(chat_id, message)
+    # for chat_id in chat_ids:
+    #     await bot.send_message(chat_id, message)
+    pass

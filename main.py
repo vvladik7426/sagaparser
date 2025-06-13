@@ -1,16 +1,14 @@
 import asyncio
-import time
 from dataclasses import dataclass
-from datetime import datetime
 
 from selenium.common import TimeoutException
 from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
-from selenium.webdriver.ie.webdriver import WebDriver
-from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.wait import WebDriverWait
 
+from database import ClientsDatabaseConnection
 from telegram_bot import start_bot, send_to_all_clients
 
 
@@ -197,13 +195,8 @@ async def saga_monitoring(immomio_creds: ImmomioCredentials):
         await asyncio.sleep(.001)
 
 async def main():
-    asyncio.create_task(saga_monitoring(immomio_creds=ImmomioCredentials(
-        email="koval321@gmail.com",
-        password="#Ab111111"
-    )))
     await start_bot()
-
-
 
 if __name__=="__main__":
     asyncio.run(main())
+    #koval321@gmail.com #Ab111111
