@@ -1,5 +1,7 @@
+import asyncio
 import os
 from datetime import timedelta, datetime
+from queue import Queue
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
@@ -150,7 +152,14 @@ async def tell_handler(message: Message):
 async def message_cleaner(message: Message):
     await message.delete()
 
-async def start_bot():
+async def queue_listener(queue: Queue):
+    while True:
+        msg = await queue.get()
+        print(msg)
+        await asyncio.sleep(.01)
+
+async def start_bot(queue):
+    asyncio.create_task(queue_listener(queue))
     await dp.start_polling(bot)
 
 async def send_to_all_clients(message: str):
