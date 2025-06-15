@@ -84,6 +84,14 @@ class ClientsDatabaseConnection(sqlite3.Connection):
                        """, (email, password, telegram_username))
         self.commit()
 
+    def delete_client(self, telegram_username: str):
+        cursor = self.cursor()
+        cursor.execute("""
+            DELETE FROM clients
+            WHERE telegram_username = ?
+        """, (telegram_username,))
+        self.commit()
+
     def __enter__(self):
         print("Connected to database")
         return self

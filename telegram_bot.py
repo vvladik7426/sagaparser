@@ -20,9 +20,9 @@ dp = Dispatcher()
 async def start_handler(message: Message):
     with ClientsDatabaseConnection() as db:
         client = db.read_clients().by_telegram_username(message.from_user.username)
-        if client is not None:
+        if client is not None and client.immomio_email and client.immomio_password and client.plan_activated_at:
             await message.reply(f"Привіт, {message.from_user.first_name}!\n\n"
-                                f"Ви вже зареєстровані.\n"
+                                f"Ви вже активовані.\n"
                                 f"Наступна оплата: {(client.plan_activated_at + timedelta(days=30)).strftime('%d.%m.%Y')}\n",
                                 reply_markup=InlineKeyboardMarkup(inline_keyboard=[
                                     [InlineKeyboardButton(text="Підтримка", url="https://t.me/yukothehealer")]
@@ -40,7 +40,8 @@ async def start_handler(message: Message):
                                 reply_markup=InlineKeyboardMarkup(inline_keyboard=[
                                     [InlineKeyboardButton(text="Підтримка", url="https://t.me/yukothehealer")]
                                 ]))
-            db.write_client(ClientData(message.from_user.username))
+            if client is None:
+                db.write_client(ClientData(message.from_user.username))
 
 @dp.message(Command("setclcreds"))
 async def setclcreds_handler(message: Message):
@@ -69,7 +70,7 @@ async def activatecl_handler(message: Message):
         args = message.text.split(" ")[1:]
         print("activatecl args:", args)
         if len(args) >= 1:
-            username = args[0]
+            username = args[0].replace('@', '')
             with ClientsDatabaseConnection() as db:
                 client = db.read_clients().by_telegram_username(username)
                 if client is not None:
@@ -84,11 +85,37 @@ async def activatecl_handler(message: Message):
 
 @dp.message(Command("rmcl"))
 async def rmcl_handler(message: Message):
-    pass
+    if message.from_user.id == 1909320566:
+        args = message.text.split(" ")[1:]
+        print("rmcl args:", args)
+        if len(args) >= 1:
+            username = args[0].replace('@', '')
+            with ClientsDatabaseConnection() as db:
+                client = db.read_clients().by_telegram_username(username)
+                if client is not None:
+                    db.delete_client(username)
+                    await message.reply(f"- {client}")
+                else:
+                    await message.reply(f"!= any client")
+        else:
+            await message.reply("Not enough arguments!")
 
 @dp.message(Command("getcl"))
 async def getcl_handler(message: Message):
-    pass
+    if message.from_user.id == 1909320566:
+        args = message.text.split(" ")[1:]
+        print("getcl args:", args)
+        if len(args) >= 1:
+            username = args[0].replace('@', '')
+            with ClientsDatabaseConnection() as db:
+                client = db.read_clients().by_telegram_username(username)
+                if client is not None:
+                    await message.reply(f"== {client}")
+                else:
+                    await message.reply(f"!= any client")
+        else:
+            await message.reply("Not enough args")
+
 
 @dp.message()
 async def message_cleaner(message: Message):
