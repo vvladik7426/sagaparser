@@ -1,5 +1,6 @@
 import asyncio
 from dataclasses import dataclass
+from queue import Queue
 
 from selenium.common import TimeoutException
 from selenium.webdriver import Chrome
@@ -194,9 +195,10 @@ async def saga_monitoring(immomio_creds: ImmomioCredentials):
             
         await asyncio.sleep(.001)
 
-async def main():
+async def main(queue):
     await start_bot()
 
 if __name__=="__main__":
-    asyncio.run(main())
+    queue = Queue()
+    asyncio.run(main(queue))
     #koval321@gmail.com #Ab111111

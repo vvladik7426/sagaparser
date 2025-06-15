@@ -20,7 +20,7 @@ class ClientsDatabaseConnection(sqlite3.Connection):
         cursor = self.cursor()
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS clients (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            telegram_chatid INTEGER NOT NULL,
             telegram_username TEXT NOT NULL,
             immomio_email TEXT DEFAULT NULL,
             immomio_password TEXT DEFAULT NULL,
@@ -34,13 +34,15 @@ class ClientsDatabaseConnection(sqlite3.Connection):
     def write_client(self, client: ClientData):
         cursor = self.cursor()
         cursor.execute("""
-           INSERT INTO clients (telegram_username,
+           INSERT INTO clients (telegram_chatid,
+                                telegram_username,
                                 immomio_email,
                                 immomio_password,
                                 plan_activated_at,
                                 created_at)
-           VALUES (?, ?, ?, ?, ?)
+           VALUES (?, ?, ?, ?, ?, ?)
        """, (
+            client.telegram_chatid,
            client.telegram_username,
            client.immomio_email,
            client.immomio_password,
@@ -57,6 +59,7 @@ class ClientsDatabaseConnection(sqlite3.Connection):
         clients = []
         for row in rows:
             clients.append(ClientData(
+                telegram_chatid=row[0],
                 telegram_username=row[1],
                 immomio_email=row[2],
                 immomio_password=row[3],

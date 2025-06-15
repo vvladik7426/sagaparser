@@ -4,6 +4,7 @@ from datetime import datetime
 
 @dataclass(frozen=True)
 class ClientData:
+    telegram_chatid: int
     telegram_username: str
     immomio_email: str | None = field(default=None)
     immomio_password: str | None = field(default=None)
