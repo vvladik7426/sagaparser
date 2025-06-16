@@ -1,6 +1,8 @@
 import asyncio
+import threading
 from dataclasses import dataclass
-from q import Queue
+from queue import Queue
+from time import sleep
 
 from selenium.common import TimeoutException
 from selenium.webdriver import Chrome
@@ -9,6 +11,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 
+from client_data import ClientData
+from credentials import ImmomioCredentials
 from database import ClientsDatabaseConnection
 from telegram_bot import start_bot, send_to_all_clients
 
@@ -18,11 +22,6 @@ class ApartmentCard:
     index: int
     about: str
     link: str
-
-@dataclass(frozen=True)
-class ImmomioCredentials:
-    email: str
-    password: str
 
 class SagaWebParser(Chrome):
     def __init__(self, immomio_credentials: ImmomioCredentials):
@@ -152,10 +151,12 @@ class SagaWebParser(Chrome):
 
         return True
 
-async def new_cards_handler(cards: list[ApartmentCard], handled: dict[str, bool]):
+async def new_cards_handler(client: ClientData, queue: Queue, cards: list[ApartmentCard], handled: dict[str, bool]):
     for card in cards:
         print("NEW CARD FOUND!")
         print(card)
+        print(client)
+        print(queue)
         print("_______________")
 
         message = f"""
@@ -169,9 +170,14 @@ async def new_cards_handler(cards: list[ApartmentCard], handled: dict[str, bool]
 ━━━━━━━
         """
 
-        await send_to_all_clients(message)
+        queue.put({
+            "action": "send_message",
+            "chat_id": client.telegram_chatid,
+            "msg_text": message
+        })
 
-async def saga_monitoring(immomio_creds: ImmomioCredentials):
+def saga_monitoring(client: ClientData, queue: Queue):
+    immomio_creds = client.immomio_creds()
     parser = SagaWebParser(immomio_creds)
     parsed_cards = set([])
     while True:
@@ -183,7 +189,7 @@ async def saga_monitoring(immomio_creds: ImmomioCredentials):
                 handled_cards = {}
                 for new_card in new_cards:
                     handled_cards[new_card.link] = parser.handle_apartment_card(new_card)
-                await new_cards_handler(list(new_cards), handled_cards)
+                new_cards_handler(client, queue, list(new_cards), handled_cards)
         except Exception as ex:
             print(f"error on parsing: {ex}")
             try:
@@ -193,12 +199,23 @@ async def saga_monitoring(immomio_creds: ImmomioCredentials):
                 pass
             parser = SagaWebParser(immomio_creds)
             
-        await asyncio.sleep(.001)
+        sleep(.1)
 
-async def main(queue: Queue):
+async def main(queue):
+    with ClientsDatabaseConnection() as db:
+        for client in db.read_clients():
+            queue.put({"action": "send_message",
+                       "chat_id": client.telegram_chatid,
+                       "msg_text": "Hello World from queue!"})
+            # if client.immomio_creds() is not None:
+            threading.Thread(target=saga_monitoring, args=(
+                client,
+                queue,
+            ))
+
     await start_bot(queue)
 
 if __name__=="__main__":
-    q = Queue()
-    asyncio.run(main(q))
+    queue = Queue()
+    asyncio.run(main(queue))
     #koval321@gmail.com #Ab111111
