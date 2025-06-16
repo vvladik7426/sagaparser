@@ -3,7 +3,7 @@ from datetime import datetime
 
 from client_data import ClientData
 
-class DatabaseClients(list):
+class DatabaseClients(list[ClientData]):
     def __str__(self):
         return f"DatabaseClients[{len(self)}]: " + super().__str__()
 

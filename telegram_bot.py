@@ -1,3 +1,4 @@
+import asyncio
 import os
 from datetime import timedelta, datetime
 
@@ -150,7 +151,26 @@ async def tell_handler(message: Message):
 async def message_cleaner(message: Message):
     await message.delete()
 
-async def start_bot():
+async def listen_queue(queue):
+    print("Queue listener bot", queue)
+    while True:
+        msg: dict = queue.get()
+        print("Message from queue:", msg)
+        if msg is not None:
+            action = msg.get("send_message", None)
+            match action:
+                case "send_message":
+                    chat_id = msg.get("chat_id", -1)
+                    text = msg.get("msg_text", "")
+                    await bot.send_message(chat_id, text)
+                case _:
+                    pass
+        await asyncio.sleep(1)
+
+
+async def start_bot(queue):
+    asyncio.create_task(listen_queue(queue))
+    print("bot polling")
     await dp.start_polling(bot)
 
 async def send_to_all_clients(message: str):
