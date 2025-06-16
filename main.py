@@ -39,7 +39,7 @@ class SagaWebParser(Chrome):
         options.add_argument('--no-sandbox')
         options.add_argument('--mute-audio')
         options.add_argument('--lang=en')
-        options.add_argument("--headless")
+        # options.add_argument("--headless")
         super().__init__(options=options)
         try:
             if not self.login_to_immomio(immomio_credentials):
@@ -87,7 +87,7 @@ class SagaWebParser(Chrome):
 
     def is_immomio_profile_page(self) -> bool:
         try:
-            WebDriverWait(self, 10).until(
+            WebDriverWait(self, 30).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, "#accountDropdown"))
             )
             return True
@@ -153,7 +153,7 @@ class SagaWebParser(Chrome):
 
         return True
 
-async def new_cards_handler(client: ClientData, queue: janus.SyncQueue[dict], cards: list[ApartmentCard], handled: dict[str, bool]):
+def new_cards_handler(client: ClientData, queue: janus.SyncQueue[dict], cards: list[ApartmentCard], handled: dict[str, bool]):
     for card in cards:
         print("NEW CARD FOUND!")
         print(card)
@@ -184,7 +184,7 @@ def saga_monitoring(client: ClientData, queue: janus.SyncQueue[dict]):
     parsed_cards = set([])
     while True:
         try:
-            if client.plan_activated_at + timedelta(days=30) >= datetime.now():
+            if client.plan_activated_at + timedelta(days=30) <= datetime.now():
                 queue.put({
                     "action": "send_message",
                     "chat_id": client.telegram_chatid,
@@ -219,7 +219,7 @@ async def main(queue):
                 threading.Thread(target=saga_monitoring, args=(
                     client,
                     queue.sync_q,
-                ))
+                )).start()
 
     await start_bot(queue.async_q)
 

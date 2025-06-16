@@ -57,11 +57,11 @@ async def setclcreds_handler(message: Message):
             immomio_email = args[1]
             immomio_password = args[2]
             with ClientsDatabaseConnection() as db:
-                client = db.read_clients().by_telegram_username(message.from_user.username)
+                client = db.read_clients().by_telegram_username(username)
                 if client is not None:
                     await message.reply(f"== {client}")
                     db.update_immomio_credentials(username, immomio_email, immomio_password)
-                    await message.reply(f"~= {db.read_clients().by_telegram_username(message.from_user.username)}")
+                    await message.reply(f"~= {db.read_clients().by_telegram_username(username)}")
                 else:
                     await message.reply("!= any client")
         else:
