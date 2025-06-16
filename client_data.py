@@ -21,4 +21,9 @@ class ClientData:
         )
 
     def __str__(self):
-        return f"SAGA database client {self.__dict__}"
+        return (f"SAGA database client\n"
+                f"TG username: {self.telegram_username}\n"
+                f"TG chatid: {self.telegram_chatid}\n"
+                f"IMMOMIO email: {self.immomio_email}\n"
+                f"IMMOMIO password: {self.immomio_password}\n"
+                f"PLAN activated at: {self.plan_activated_at}\n")

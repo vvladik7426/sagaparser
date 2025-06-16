@@ -43,6 +43,8 @@ async def start_handler(message: Message):
                                     [InlineKeyboardButton(text="Підтримка", url="https://t.me/yukothehealer")]
                                 ]))
             if client is None:
+                client = ClientData(message.from_user.id, message.from_user.username)
+                await bot.send_message(1909320566, f"New client: {client.telegram_username}")
                 db.write_client(ClientData(message.from_user.id, message.from_user.username))
 
 @dp.message(Command("setclcreds"))
@@ -113,9 +115,14 @@ async def getcl_handler(message: Message):
         if len(args) >= 1:
             username = args[0].replace('@', '')
             with ClientsDatabaseConnection() as db:
+                if username == "a":
+                    clients = db.read_clients()
+                    for client in clients:
+                        await message.reply(f"{client}")
+                    return
                 client = db.read_clients().by_telegram_username(username)
                 if client is not None:
-                    await message.reply(f"== {client}")
+                    await message.reply(f"{client}")
                 else:
                     await message.reply(f"!= any client")
         else:
