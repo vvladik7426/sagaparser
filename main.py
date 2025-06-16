@@ -39,7 +39,7 @@ class SagaWebParser(Chrome):
         options.add_argument('--no-sandbox')
         options.add_argument('--mute-audio')
         options.add_argument('--lang=en')
-        # options.add_argument("--headless")
+        options.add_argument("--headless")
         super().__init__(options=options)
         try:
             if not self.login_to_immomio(immomio_credentials):
