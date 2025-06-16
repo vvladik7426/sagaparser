@@ -12,8 +12,8 @@ from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from client_data import ClientData
 from database import ClientsDatabaseConnection
 
-# api_token = "7582392341:AAEegcVYFVfBHFAMXVj6eC0o1h893TTBjSs"
-api_token = "6546781849:AAGLlxA0Y_Vmc4phKCH7utXE-GTzFy8RVgQ"  # test bot @Person_AI_bot
+api_token = "7582392341:AAEegcVYFVfBHFAMXVj6eC0o1h893TTBjSs"
+# api_token = "6546781849:AAGLlxA0Y_Vmc4phKCH7utXE-GTzFy8RVgQ"  # test bot @Person_AI_bot
 
 bot = Bot(api_token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
