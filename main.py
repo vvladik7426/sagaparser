@@ -1,9 +1,11 @@
 import asyncio
 import threading
 from dataclasses import dataclass
+from datetime import timedelta, datetime
 from queue import Queue
 from time import sleep
 
+import janus
 from selenium.common import TimeoutException
 from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.options import Options
@@ -151,7 +153,7 @@ class SagaWebParser(Chrome):
 
         return True
 
-async def new_cards_handler(client: ClientData, queue: Queue, cards: list[ApartmentCard], handled: dict[str, bool]):
+async def new_cards_handler(client: ClientData, queue: janus.SyncQueue[dict], cards: list[ApartmentCard], handled: dict[str, bool]):
     for card in cards:
         print("NEW CARD FOUND!")
         print(card)
@@ -176,12 +178,21 @@ async def new_cards_handler(client: ClientData, queue: Queue, cards: list[Apartm
             "msg_text": message
         })
 
-def saga_monitoring(client: ClientData, queue: Queue):
+def saga_monitoring(client: ClientData, queue: janus.SyncQueue[dict]):
     immomio_creds = client.immomio_creds()
     parser = SagaWebParser(immomio_creds)
     parsed_cards = set([])
     while True:
         try:
+            if client.plan_activated_at + timedelta(days=30) >= datetime.now():
+                queue.put({
+                    "action": "send_message",
+                    "chat_id": client.telegram_chatid,
+                    "msg_text": "Привіт! Нагадую, що сьогодні ви були деактивовані, оскільки термін вашого тарифу"
+                                " закінчився. Зв'яжіться з підтримкою для його відновлення"
+                })
+                return
+
             cards = set(parser.parse_apartment_cards())
             new_cards = cards.difference(parsed_cards)
             if len(new_cards) > 0:
@@ -204,18 +215,15 @@ def saga_monitoring(client: ClientData, queue: Queue):
 async def main(queue):
     with ClientsDatabaseConnection() as db:
         for client in db.read_clients():
-            queue.put({"action": "send_message",
-                       "chat_id": client.telegram_chatid,
-                       "msg_text": "Hello World from queue!"})
-            # if client.immomio_creds() is not None:
-            threading.Thread(target=saga_monitoring, args=(
-                client,
-                queue,
-            ))
+            if client.immomio_creds() is not None:
+                threading.Thread(target=saga_monitoring, args=(
+                    client,
+                    queue.sync_q,
+                ))
 
-    await start_bot(queue)
+    await start_bot(queue.async_q)
 
 if __name__=="__main__":
-    queue = Queue()
+    queue = janus.Queue()
     asyncio.run(main(queue))
     #koval321@gmail.com #Ab111111

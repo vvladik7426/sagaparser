@@ -2,6 +2,7 @@ import asyncio
 import os
 from datetime import timedelta, datetime
 
+import janus
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
@@ -151,13 +152,13 @@ async def tell_handler(message: Message):
 async def message_cleaner(message: Message):
     await message.delete()
 
-async def listen_queue(queue):
+async def listen_queue(queue: janus.AsyncQueue[dict]):
     print("Queue listener bot", queue)
     while True:
-        msg: dict = queue.get()
+        msg: dict = await queue.get()
         print("Message from queue:", msg)
         if msg is not None:
-            action = msg.get("send_message", None)
+            action = msg.get("action", None)
             match action:
                 case "send_message":
                     chat_id = msg.get("chat_id", -1)
@@ -168,7 +169,7 @@ async def listen_queue(queue):
         await asyncio.sleep(1)
 
 
-async def start_bot(queue):
+async def start_bot(queue: janus.AsyncQueue[dict]):
     asyncio.create_task(listen_queue(queue))
     print("bot polling")
     await dp.start_polling(bot)
