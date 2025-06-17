@@ -188,10 +188,16 @@ def new_cards_handler(client: ClientData, queue: janus.SyncQueue[dict], cards: l
         )
     })
 
-def saga_monitoring(client: ClientData, queue: janus.SyncQueue[dict]):
+def saga_monitoring(client: ClientData, queue: janus.SyncQueue[dict], parsed_cards: set = None):
+    queue.put({
+        "action": "send_message",
+        "chat_id": ADMIN_CHAT_ID,
+        "msg_text": f"Started saga monitoring for {client}"
+    })
+
     immomio_creds = client.immomio_creds()
     parser = SagaWebParser(immomio_creds)
-    parsed_cards = set([])
+    parsed_cards = set([]) if parsed_cards is None else parsed_cards
     while True:
         try:
             if client.plan_activated_at + timedelta(days=30) <= datetime.now():
@@ -213,12 +219,17 @@ def saga_monitoring(client: ClientData, queue: janus.SyncQueue[dict]):
                 new_cards_handler(client, queue, list(new_cards), handled_cards)
         except Exception as ex:
             print(f"error on parsing: {ex}")
+            queue.put({
+                "action": "send_message",
+                "chat_id": ADMIN_CHAT_ID,
+                "msg_text": f"Err while saga monitoring for {client}: {ex}"
+            })
             try:
                 parser.close()
                 parser.quit()
             except:
                 pass
-            parser = SagaWebParser(immomio_creds)
+            return saga_monitoring(client, queue, parsed_cards)
             
         sleep(.1)
 
