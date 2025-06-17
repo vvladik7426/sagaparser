@@ -12,6 +12,8 @@ from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from client_data import ClientData
 from database import ClientsDatabaseConnection
 
+from config import ADMIN_CHAT_ID
+
 api_token = "7582392341:AAEegcVYFVfBHFAMXVj6eC0o1h893TTBjSs"
 # api_token = "6546781849:AAGLlxA0Y_Vmc4phKCH7utXE-GTzFy8RVgQ"  # test bot @Person_AI_bot
 
@@ -49,7 +51,7 @@ async def start_handler(message: Message):
 
 @dp.message(Command("setclcreds"))
 async def setclcreds_handler(message: Message):
-    if message.from_user.id == 1909320566:
+    if message.from_user.id == ADMIN_CHAT_ID:
         args = message.text.split(" ")[1:]
         print("setclcreds args:", args)
         if len(args) >= 3:
@@ -69,7 +71,7 @@ async def setclcreds_handler(message: Message):
 
 @dp.message(Command("activatecl"))
 async def activatecl_handler(message: Message):
-    if message.from_user.id == 1909320566:
+    if message.from_user.id == ADMIN_CHAT_ID:
         args = message.text.split(" ")[1:]
         print("activatecl args:", args)
         if len(args) >= 1:
@@ -92,7 +94,7 @@ async def activatecl_handler(message: Message):
 
 @dp.message(Command("rmcl"))
 async def rmcl_handler(message: Message):
-    if message.from_user.id == 1909320566:
+    if message.from_user.id == ADMIN_CHAT_ID:
         args = message.text.split(" ")[1:]
         print("rmcl args:", args)
         if len(args) >= 1:
@@ -109,7 +111,7 @@ async def rmcl_handler(message: Message):
 
 @dp.message(Command("getcl"))
 async def getcl_handler(message: Message):
-    if message.from_user.id == 1909320566:
+    if message.from_user.id == ADMIN_CHAT_ID:
         args = message.text.split(" ")[1:]
         print("getcl args:", args)
         if len(args) >= 1:
@@ -130,7 +132,7 @@ async def getcl_handler(message: Message):
 
 @dp.message(Command("bc"))
 async def bc_handler(message: Message):
-    if message.from_user.id == 1909320566:
+    if message.from_user.id == ADMIN_CHAT_ID:
         args = message.text.split(" ")[1:]
         print("bc args:", args)
         if len(args) >= 1:
@@ -139,7 +141,7 @@ async def bc_handler(message: Message):
 
 @dp.message(Command("tell"))
 async def tell_handler(message: Message):
-    if message.from_user.id == 1909320566:
+    if message.from_user.id == ADMIN_CHAT_ID:
         args = message.text.split(" ")[1:]
         print("tell args:", args)
         if len(args) >= 2:

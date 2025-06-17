@@ -14,6 +14,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 
 from client_data import ClientData
+from config import ADMIN_CHAT_ID
 from credentials import ImmomioCredentials
 from database import ClientsDatabaseConnection
 from telegram_bot import start_bot, send_to_all_clients
@@ -177,6 +178,15 @@ def new_cards_handler(client: ClientData, queue: janus.SyncQueue[dict], cards: l
             "chat_id": client.telegram_chatid,
             "msg_text": message
         })
+
+    queue.put({
+        "action": "send_message",
+        "chat_id": ADMIN_CHAT_ID,
+        "msg_text": (
+            f"CARDS HANDLER SENT {len(cards)} MESSAGES TO {client.telegram_username}:{client.telegram_chatid}\n"
+            f"{len(handled)} are handled."
+        )
+    })
 
 def saga_monitoring(client: ClientData, queue: janus.SyncQueue[dict]):
     immomio_creds = client.immomio_creds()
