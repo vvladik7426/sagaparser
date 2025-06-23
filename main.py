@@ -222,7 +222,7 @@ def saga_monitoring(client: ClientData, queue: janus.SyncQueue[dict], parsed_car
             queue.put({
                 "action": "send_message",
                 "chat_id": ADMIN_CHAT_ID,
-                "msg_text": f"Err while saga monitoring for {client}: {ex}"
+                "msg_text": f"Err while saga monitoring for {client.telegram_username}: {ex}"
             })
             try:
                 parser.close()

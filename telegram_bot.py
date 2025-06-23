@@ -164,17 +164,20 @@ async def message_cleaner(message: Message):
 async def listen_queue(queue: janus.AsyncQueue[dict]):
     print("Queue listener bot", queue)
     while True:
-        msg: dict = await queue.get()
-        print("Message from queue:", msg)
-        if msg is not None:
-            action = msg.get("action", None)
-            match action:
-                case "send_message":
-                    chat_id = msg.get("chat_id", -1)
-                    text = msg.get("msg_text", "")
-                    await bot.send_message(chat_id, text)
-                case _:
-                    pass
+        try:
+            msg: dict = await queue.get()
+            print("Message from queue:", msg)
+            if msg is not None:
+                action = msg.get("action", None)
+                match action:
+                    case "send_message":
+                        chat_id = msg.get("chat_id", -1)
+                        text = msg.get("msg_text", "")
+                        await bot.send_message(chat_id, text)
+                    case _:
+                        pass
+        except Exception as ex:
+            pass
         await asyncio.sleep(1)
 
 
